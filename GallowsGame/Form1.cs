@@ -15,6 +15,33 @@ namespace GallowsGame
 {
     public partial class Form1 : Form
     {
+        /// <summary>
+        /// Список слов по-умолчанию
+        /// </summary>
+        private List<WordInfo> defaultWordInfos = new List<WordInfo>()
+        {
+            new WordInfo()
+            {
+                Word = "Аблютофобия",
+                Description = "Боязнь умывания, купания, стирки или чистки",
+                Theme = "Фобии"
+            },
+            new WordInfo()
+            {
+                Word = "Пневмонит",
+                Description = "Интерстициальное воспаление сосудистой стенки альвеол, сопровождающееся их рубцеванием",
+                Theme = "Болезни"
+            },
+            new WordInfo()
+            {
+                Word = "Петрикор",
+                Description = "Запах земли после дождя",
+                Theme = "Прочее"
+            },
+        };
+        
+
+
         static Random rnd = new Random();
 
         /// <summary>
@@ -52,7 +79,7 @@ namespace GallowsGame
         /// Загрузка информации о словах из файла
         /// </summary>
         /// <returns>Возвращает True, если слова успешно загружены, иначе - false</returns>
-        private bool LoadWords()
+        private void LoadWords()
         {
             try
             {
@@ -76,18 +103,19 @@ namespace GallowsGame
                         {
                             filePath = dialog.FileName;
                         }
-                        else
-                            return false;
                     }
-                    else
-                        return false;
                 }
 
-                // считываем весь текст из файла
-                var wordInfosJson = File.ReadAllText(filePath);
+                if(string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                    wordInfos = defaultWordInfos;
+                else
+                {
+                    // считываем весь текст из файла
+                    var wordInfosJson = File.ReadAllText(filePath);
 
-                // преобразуем текст в список объектов
-                wordInfos = JsonConvert.DeserializeObject<List<WordInfo>>(wordInfosJson) ?? new List<WordInfo>();
+                    // преобразуем текст в список объектов
+                    wordInfos = JsonConvert.DeserializeObject<List<WordInfo>>(wordInfosJson) ?? new List<WordInfo>();
+                }
 
                 // выбираем из списка с информацией о словах все темы и убираем дубли
                 themes = wordInfos.Select(x => x.Theme).Distinct().ToList();
@@ -105,13 +133,10 @@ namespace GallowsGame
                     // проставляем полученную тему в ComboBox
                     ThemesComboBox.SelectedIndex = currentThemeIndex;
                 }
-
-                return wordInfos.Any();
             }
             catch (Exception e)
             {
                 MessageBox.Show($"Не удалось загрузить файл со словами.\n{e.Message}");
-                return false;
             }
         }
 
@@ -162,12 +187,6 @@ namespace GallowsGame
         /// <param name="e">Аргументы события</param>
         private void NewGameButton_Click(object sender, EventArgs e)
         {
-            if (!wordInfos.Any())
-            {
-                // если не удалось загрузить слова, то ничего не делаем, иначе - инициализируем игру
-                if (!LoadWords())
-                    return;
-            }
 
             InitializeNewGame();
         }
